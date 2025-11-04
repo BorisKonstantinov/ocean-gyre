@@ -1,0 +1,79 @@
+======================================================================
+SUMMARY OF UNIQUE VARIABLES
+======================================================================
+
+VARIABLE: 2 metre dewpoint temperature (2d)
+--------------------------------------------------
+Parameter ID: 168
+Units: K
+Level: 0 sfc
+Data Shape: (2, 2)
+Sample Values: [277.20706177 277.20510864 276.72105408 276.69689941]
+Statistics:
+  Min: 276.6969
+  Max: 277.2071
+  Mean: 276.9575
+  Std Dev: 0.2487
+  Valid Points: 4
+
+
+VARIABLE: 2 metre temperature (2t)
+--------------------------------------------------
+Parameter ID: 167
+Units: K
+Level: 0 sfc
+Data Shape: (2, 2)
+Sample Values: [279.99827766 279.9552002  279.94690132 279.88654518]
+Statistics:
+  Min: 279.8865
+  Max: 279.9983
+  Mean: 279.9467
+  Std Dev: 0.0398
+  Valid Points: 4
+
+
+VARIABLE: Surface pressure (sp)
+--------------------------------------------------
+Parameter ID: 134
+Units: Pa
+Level: 0 sfc
+Data Shape: (2, 2)
+Sample Values: [97090.8671875 96858.5234375 96991.859375  96709.734375 ]
+Statistics:
+  Min: 96709.7344
+  Max: 97090.8672
+  Mean: 96912.7461
+  Std Dev: 143.3003
+  Valid Points: 4
+
+
+VARIABLE: Surface net short-wave (solar) radiation (ssr)
+--------------------------------------------------
+Parameter ID: 176
+Units: J m**-2
+Level: 0 sfc
+Data Shape: (2, 2)
+Sample Values: [3.59999877e-12 3.59999877e-12 3.59999877e-12 3.59999877e-12]
+Statistics:
+  Min: 0.0000
+  Max: 0.0000
+  Mean: 0.0000
+  Std Dev: 0.0000
+  Valid Points: 4
+
+
+VARIABLE: Total cloud cover (tcc)
+--------------------------------------------------
+Parameter ID: 164
+Units: (0 - 1)
+Level: 0 sfc
+Data Shape: (2, 2)
+Sample Values: [0. 0. 0. 0.]
+Statistics:
+  Min: 0.0000
+  Max: 0.0000
+  Mean: 0.0000
+  Std Dev: 0.0000
+  Valid Points: 4
+
+Total unique variables found: 5
