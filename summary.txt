@@ -77,3 +77,101 @@ Statistics:
   Valid Points: 4
 
 Total unique variables found: 5
+
+
+
+# Load data individually per variable
+ds_t2m = xarray.open_dataset(
+    "2025J.grib", engine="cfgrib", filter_by_keys={"shortName": "2t"}
+)
+ds_d2m = xarray.open_dataset(
+    "2025J.grib", engine="cfgrib", filter_by_keys={"shortName": "2d"}
+)
+ds_sp = xarray.open_dataset(
+    "2025J.grib", engine="cfgrib", filter_by_keys={"shortName": "sp"}
+)
+ds_tcc = xarray.open_dataset(
+    "2025J.grib", engine="cfgrib", filter_by_keys={"shortName": "tcc"}
+)
+ds_ssr = xarray.open_dataset(
+    "2025J.grib", engine="cfgrib", filter_by_keys={"shortName": "ssr"}
+)
+# Convert to Pandas dataframe
+df_t2m = ds_t2m.to_dataframe()
+df_d2m = ds_d2m.to_dataframe()
+df_sp = ds_sp.to_dataframe()
+df_tcc = ds_tcc.to_dataframe()
+df_ssr = ds_ssr.to_dataframe()
+# Convert from 2D 2x2 grid to a 1D singular point at 30.11N, 2.11E
+df_t2m = df_t2m.xs((30.11, 2.11), level=("latitude", "longitude"))
+df_d2m = df_d2m.xs((30.11, 2.11), level=("latitude", "longitude"))
+df_sp = df_sp.xs((30.11, 2.11), level=("latitude", "longitude"))
+df_tcc = df_tcc.xs((30.11, 2.11), level=("latitude", "longitude"))
+df_ssr = df_ssr.xs((30.11, 2.11), level=("latitude", "longitude"))
+# Drop clutter
+df_t2m = df_t2m.drop(columns=["number", "step", "surface", "valid_time"])
+df_d2m = df_d2m.drop(columns=["number", "step", "surface", "valid_time"])
+df_sp = df_sp.drop(columns=["number", "step", "surface", "valid_time"])
+df_tcc = df_tcc.drop(columns=["number", "step", "surface", "valid_time"])
+# Prepare Surface Net Solar Radiation 'ssr' for merging
+df_ssr = df_ssr[["valid_time", "ssr"]].reset_index(drop=True)
+df_ssr = df_ssr.set_index("valid_time")
+df_ssr.index.name = "time"
+df_ssr = df_ssr[(df_ssr.index >= "2025-01-01") & (df_ssr.index < "2025-02-01")]
+# Merge all dataframes into a master
+df0 = pandas.concat([df_t2m, df_d2m, df_sp, df_tcc, df_ssr], axis=1)
+# Preview data information
+print("Description \n", df0.describe(), "\n", "-" * 70)
+print("Correlation matrix \n", df0.corr(numeric_only=True), "\n", "-" * 70)
+print("Data head \n", df0.head(), "\n", "-" * 70)
+# Load data individually per variable
+ds1_t2m = xarray.open_dataset(
+    "2025FMAMJJASO.grib", engine="cfgrib", filter_by_keys={"shortName": "2t"}
+)
+ds1_d2m = xarray.open_dataset(
+    "2025FMAMJJASO.grib", engine="cfgrib", filter_by_keys={"shortName": "2d"}
+)
+ds1_sp = xarray.open_dataset(
+    "2025FMAMJJASO.grib", engine="cfgrib", filter_by_keys={"shortName": "sp"}
+)
+ds1_tcc = xarray.open_dataset(
+    "2025FMAMJJASO.grib", engine="cfgrib", filter_by_keys={"shortName": "tcc"}
+)
+ds1_ssr = xarray.open_dataset(
+    "2025FMAMJJASO.grib", engine="cfgrib", filter_by_keys={"shortName": "ssr"}
+)
+# Convert to Pandas dataframe
+df1_t2m = ds1_t2m.to_dataframe()
+df1_d2m = ds1_d2m.to_dataframe()
+df1_sp = ds1_sp.to_dataframe()
+df1_tcc = ds1_tcc.to_dataframe()
+df1_ssr = ds1_ssr.to_dataframe()
+# Convert from 2D 2x2 grid to a 1D singular point at 30.11N, 2.11E
+df1_t2m = df1_t2m.xs((30.11, 2.11), level=("latitude", "longitude"))
+df1_d2m = df1_d2m.xs((30.11, 2.11), level=("latitude", "longitude"))
+df1_sp = df1_sp.xs((30.11, 2.11), level=("latitude", "longitude"))
+df1_tcc = df1_tcc.xs((30.11, 2.11), level=("latitude", "longitude"))
+df1_ssr = df1_ssr.xs((30.11, 2.11), level=("latitude", "longitude"))
+# Drop clutter
+df1_t2m = df1_t2m.drop(columns=["number", "step", "surface", "valid_time"])
+df1_d2m = df1_d2m.drop(columns=["number", "step", "surface", "valid_time"])
+df1_sp = df1_sp.drop(columns=["number", "step", "surface", "valid_time"])
+df1_tcc = df1_tcc.drop(columns=["number", "step", "surface", "valid_time"])
+# Prepare Surface Net Solar Radiation 'ssr' for merging
+df1_ssr = df1_ssr[["valid_time", "ssr"]].reset_index(drop=True)
+df1_ssr = df1_ssr.set_index("valid_time")
+df1_ssr.index.name = "time"
+df1_ssr = df1_ssr[(df1_ssr.index >= "2025-02-01") & (df1_ssr.index < "2025-10-25")]
+# Merge all dataframes into a master
+df1 = pandas.concat([df1_t2m, df1_d2m, df1_sp, df1_tcc, df1_ssr], axis=1)
+df1 = df1[df1.index < "2025-10-25"]
+# Preview data information
+print("Description \n", df1.describe(), "\n", "-" * 70)
+print("Correlation matrix \n", df1.corr(numeric_only=True), "\n", "-" * 70)
+print("Data head \n", df1.head(), "\n", "-" * 70)
+# Combine both dataframes
+df = pandas.concat([df0, df1])
+# Preview data information
+print("Description \n", df.describe(), "\n", "-" * 70)
+print("Correlation matrix \n", df.corr(numeric_only=True), "\n", "-" * 70)
+print("Data head \n", df.head(), "\n", "-" * 70)

@@ -34,51 +34,58 @@ from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import Input
 
+import matplotlib.pyplot as plt
+
+
 # --- Load Data ---
-# Load data individually per variable
-ds_t2m = xarray.open_dataset(
-    "2025J.grib", engine="cfgrib", filter_by_keys={"shortName": "2t"}
-)
-ds_d2m = xarray.open_dataset(
-    "2025J.grib", engine="cfgrib", filter_by_keys={"shortName": "2d"}
-)
-ds_sp = xarray.open_dataset(
-    "2025J.grib", engine="cfgrib", filter_by_keys={"shortName": "sp"}
-)
-ds_tcc = xarray.open_dataset(
-    "2025J.grib", engine="cfgrib", filter_by_keys={"shortName": "tcc"}
-)
-ds_ssr = xarray.open_dataset(
-    "2025J.grib", engine="cfgrib", filter_by_keys={"shortName": "ssr"}
-)
-# Convert to Pandas dataframe
-df_t2m = ds_t2m.to_dataframe()
-df_d2m = ds_d2m.to_dataframe()
-df_sp = ds_sp.to_dataframe()
-df_tcc = ds_tcc.to_dataframe()
-df_ssr = ds_ssr.to_dataframe()
-# Convert from 2D 2x2 grid to a 1D singular point at 30.11N, 2.11E
-df_t2m = df_t2m.xs((30.11, 2.11), level=("latitude", "longitude"))
-df_d2m = df_d2m.xs((30.11, 2.11), level=("latitude", "longitude"))
-df_sp = df_sp.xs((30.11, 2.11), level=("latitude", "longitude"))
-df_tcc = df_tcc.xs((30.11, 2.11), level=("latitude", "longitude"))
-df_ssr = df_ssr.xs((30.11, 2.11), level=("latitude", "longitude"))
-# Drop clutter
-df_t2m = df_t2m.drop(columns=["number", "step", "surface", "valid_time"])
-df_d2m = df_d2m.drop(columns=["number", "step", "surface", "valid_time"])
-df_sp = df_sp.drop(columns=["number", "step", "surface", "valid_time"])
-df_tcc = df_tcc.drop(columns=["number", "step", "surface", "valid_time"])
-# Prepare Surface Net Solar Radiation 'ssr' for merging
-df_ssr = df_ssr[["valid_time", "ssr"]].reset_index(drop=True)
-df_ssr = df_ssr.set_index("valid_time")
-df_ssr.index.name = "time"
-df_ssr = df_ssr[(df_ssr.index >= "2025-01-01") & (df_ssr.index < "2025-02-01")]
-# Merge all dataframes into a master
-df = pandas.concat([df_t2m, df_d2m, df_sp, df_tcc, df_ssr], axis=1)
-# Preview data information
-print("Description \n", df.describe(), "\n", "-" * 70)
-print("Correlation matrix \n", df.corr(numeric_only=True), "\n", "-" * 70)
-print("Data head \n", df.head(), "\n", "-" * 70)
+def load_data():
+    # Load data individually per variable
+    ds_t2m = xarray.open_dataset(
+        "2425Ex.grib", engine="cfgrib", filter_by_keys={"shortName": "2t"}
+    ) #Its actually 23' and 24'
+    ds_d2m = xarray.open_dataset(
+        "2425Ex.grib", engine="cfgrib", filter_by_keys={"shortName": "2d"}
+    )
+    ds_sp = xarray.open_dataset(
+        "2425Ex.grib", engine="cfgrib", filter_by_keys={"shortName": "sp"}
+    )
+    ds_tcc = xarray.open_dataset(
+        "2425Ex.grib", engine="cfgrib", filter_by_keys={"shortName": "tcc"}
+    )
+    ds_ssr = xarray.open_dataset(
+        "2425Ex.grib", engine="cfgrib", filter_by_keys={"shortName": "ssr"}
+    )
+    # Convert to Pandas DataFrame
+    df_t2m = ds_t2m.to_dataframe()
+    df_d2m = ds_d2m.to_dataframe()
+    df_sp = ds_sp.to_dataframe()
+    df_tcc = ds_tcc.to_dataframe()
+    df_ssr = ds_ssr.to_dataframe()
+    # Drop clutter
+    df_t2m = df_t2m.drop(columns=["number", "step", "surface", "valid_time"])
+    df_d2m = df_d2m.drop(columns=["number", "step", "surface", "valid_time"])
+    df_sp = df_sp.drop(columns=["number", "step", "surface", "valid_time"])
+    df_tcc = df_tcc.drop(columns=["number", "step", "surface", "valid_time"])
+    # Drop lat/lon from index
+    df_t2m.index = df_t2m.index.droplevel(["latitude", "longitude"])
+    df_d2m.index = df_d2m.index.droplevel(["latitude", "longitude"])
+    df_sp.index = df_sp.index.droplevel(["latitude", "longitude"])
+    df_tcc.index = df_tcc.index.droplevel(["latitude", "longitude"])
+    # Solar Radiation needs special handling
+    df_ssr = df_ssr[["valid_time", "ssr"]].reset_index(drop=True)
+    df_ssr = df_ssr.set_index("valid_time")
+    df_ssr.index.name = "time"
+    df_ssr = df_ssr[(df_ssr.index >= "2023-01-01") & (df_ssr.index < "2024-12-30")]
+    # Merge all dataframes into a master
+    df = pandas.concat([df_t2m, df_d2m, df_sp, df_tcc, df_ssr], axis=1)
+    df = df[(df.index >= "2023-01-01") & (df.index < "2024-12-29")]
+    # Preview data information
+    print("Description \n", df.describe(), "\n", "-" * 70)
+    print("Correlation matrix \n", df.corr(numeric_only=True), "\n", "-" * 70)
+    print("Data head \n", df.head(), "\n", "-" * 70)
+    return df
+
+df = load_data()
 
 
 # --- Structure Data ---
@@ -92,12 +99,13 @@ df["day_sin"] = numpy.sin(2 * numpy.pi * df.index.dayofyear / 365.25)
 df["day_cos"] = numpy.cos(2 * numpy.pi * df.index.dayofyear / 365.25)
 # Define features X and prediction y(X)
 X = df[["t2m", "d2m", "sp", "tcc", "ssr", "hour_sin", "hour_cos", "day_sin", "day_cos"]]
+# X = df[["t2m", "d2m", "sp", "tcc", "ssr"]]
 y = df[["t2m", "d2m", "sp", "tcc", "ssr"]].shift(-6)
 # Reshape X and y to match
 X = X.iloc[:-6]
 y = y.iloc[:-6]
 # Create a cronological testing & training split
-split = int(0.79 * len(X))  # = 583+155 = 738 = 744-6
+split = int(0.79 * len(X))
 X_train = X.iloc[:split]
 y_train = y.iloc[:split]
 X_test = X.iloc[split:]
@@ -127,13 +135,13 @@ model = Sequential(
     ]
 )
 # loss = MSE(prediction, state_t6h)
-model.compile(optimizer=Adam(learning_rate=0.0005), loss="mean_squared_error")
+model.compile(optimizer=Adam(learning_rate=0.0001), loss="mean_squared_error")
 model.summary()
 # Train the model as in pseudocode loop
 history = model.fit(
     X_train_scaled,
     y_train_scaled,
-    epochs=200,
+    epochs=100,
     batch_size=32,
     validation_data=(X_test_scaled, y_test_scaled),
     verbose=1,
@@ -150,9 +158,10 @@ for name, val in zip(columns, rmse):
 
 # --- Prediction Rollout ---
 def rollout_predictions(
-    model, X_test, y_test, steps=10, X_i=0, X_scaler=None, y_scaler=None
+    model, X_test, y_test, steps=10, X_i=0, X_scaler=X_scaler, y_scaler=y_scaler
 ):
     predictions = []
+    rmse = []
     current_state = X_test.iloc[X_i].copy()
     current_time = X_test.index[X_i]
 
@@ -164,12 +173,15 @@ def rollout_predictions(
         pred = y_scaler.inverse_transform(y_scaled_pred)[0]  # Back to physical units
         predictions.append(pred)
 
-        if step < len(y_test):
-            actual = y_test[step + X_i]
+        actual_idx = X_i + (step) * 6
+        if actual_idx < len(y_test):
+            actual = y_test[actual_idx]
             err = numpy.sqrt((actual - pred) ** 2)
-            print(
-                f"Step {step+1}: RMSEs = {dict(zip(['t2m','d2m','sp','tcc','ssr'], err))}"
-            )
+            rmse.append(err)
+            # names = ["t2m", "d2m", "sp", "tcc", "ssr"]
+            # format each RMSE as a Python float with 3 decimal places
+            # formatted = ", ".join(f"{n}: {float(e):.3f}" for n, e in zip(names, err))
+            # print(f"Step {step+1}: RMSEs -> {formatted}")
 
         current_time += pandas.Timedelta(hours=6)
         new_state = current_state.copy()
@@ -179,10 +191,27 @@ def rollout_predictions(
         new_state["day_sin"] = numpy.sin(2 * numpy.pi * current_time.dayofyear / 365.25)
         new_state["day_cos"] = numpy.cos(2 * numpy.pi * current_time.dayofyear / 365.25)
         current_state = new_state
-    return numpy.array(predictions)
+    return numpy.array(predictions), numpy.array(rmse)
 
+def plot_rmse_growth(stps, xi_lim, figname):
+    # Average RMSE over multiple rollouts to reduce variability
+    rmse = numpy.zeros((stps, 5))
+    for n in range(xi_lim):
+        preds, rmse_ = rollout_predictions(model, X_test, y_test, steps=stps, X_i=n)
+        rmse += rmse_
+    rmse /= xi_lim
+    # Plot RMSE growth over steps
+    plt.figure(figsize=(10, 6))
+    steps = numpy.arange(1, rmse.shape[0] + 1)
+    for i, name in enumerate(columns):
+        plt.plot(steps, rmse[:, i], marker='o', label=name)
+    plt.yscale('log')
+    plt.xlabel('Steps (6h each)')
+    plt.ylabel('RMSE')
+    plt.title('RMSE Growth over Autoregressive Steps')
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(f'{figname}.png')
+    return rmse
 
-# Predict 10 steps ahead (60h)
-preds = rollout_predictions(
-    model, X_test, y_test, steps=10, X_scaler=X_scaler, y_scaler=y_scaler
-)
+rmse = plot_rmse_growth(40, 50, "rmse_6")
