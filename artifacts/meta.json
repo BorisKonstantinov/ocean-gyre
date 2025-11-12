@@ -1,0 +1,19 @@
+{
+  "X_columns": [
+    "t2m",
+    "d2m",
+    "sp",
+    "tcc",
+    "ssr"
+  ],
+  "y_columns": [
+    "t2m",
+    "d2m",
+    "sp",
+    "tcc",
+    "ssr"
+  ],
+  "split_index": 13798,
+  "lead_hours": 6,
+  "saved_with": "train.py"
+}

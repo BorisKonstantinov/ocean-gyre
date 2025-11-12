@@ -45,11 +45,21 @@ def rollout_predictions(model, X_test, y_test, steps, X_i, X_scaler, y_scaler):
     return numpy.array(rmse)
 
 
-def plot_rmse_growth(stps, xi_lim, figname):
+def plot_rmse_growth(
+    steps, xi_lim, X_test, y_test, y_train, model, X_scaler, y_scaler
+):
     # Average RMSE over multiple rollouts to reduce variability
-    rmse = numpy.zeros((stps, 5))
+    rmse = numpy.zeros((steps, 5))
     for n in range(xi_lim):
-        rmse_ = rollout_predictions(model, X_test, y_test, steps=stps, X_i=n)
+        rmse_ = rollout_predictions(
+            model,
+            X_test,
+            y_test,
+            steps=steps,
+            X_i=n,
+            X_scaler=X_scaler,
+            y_scaler=y_scaler,
+        )
         rmse += rmse_
     rmse = numpy.sqrt(rmse / xi_lim)
     # Plot RMSE growth over steps
@@ -63,7 +73,7 @@ def plot_rmse_growth(stps, xi_lim, figname):
     plt.title("RMSE Growth over Autoregressive Steps")
     plt.legend()
     plt.grid(True)
-    plt.savefig(f"{figname}.png")
+    plt.savefig("rmse_model_vars.png")
     return rmse
 
 
@@ -151,7 +161,7 @@ def plot_error_curves(rmse_model, rmse_pers, rmse_climo, var="t2m", figname="err
     plt.yscale("log")
     plt.xlabel("Steps (6h each)")
     plt.ylabel("RMSE (native units)")
-    plt.ylim(-1e-12, 2e6)
+    plt.ylim(0.1, 2e6)
     plt.title(f"RMSE vs Lead — {var}")
     plt.grid(True, which="both", alpha=0.4)
     plt.legend()
@@ -176,7 +186,7 @@ def plot_skill_curves(skill_pers, skill_climo, var="t2m", figname="skill"):
     plt.axhline(0, color="k", lw=1)
     plt.xlabel("Steps (6h each)")
     plt.ylabel("Skill (1 - RMSE_model/RMSE_baseline)")
-    plt.ylim(-5.5, 4.5)
+    plt.ylim(-5, 5)
     plt.title(f"Skill vs Lead — {var}")
     plt.grid(True, alpha=0.4)
     plt.legend()

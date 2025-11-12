@@ -10,9 +10,10 @@ from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import Input
 
-# Homebrew imports
+# Homebrew imports alias egg="source ~/.venv/g/bin/activate" 
 import data
 import analysis
+import train
 
 
 df = data.load_data()
@@ -31,31 +32,26 @@ X, y = data.structure_data(df)
 ) = data.prep_data(X, y)
 
 
-# --- Build Model ---
-# A simple feed-forward neural network (MLP)
-model = Sequential(
-    [
-        Input(shape=(X_train_scaled.shape[1],)),
-        Dense(64, activation="relu"),
-        Dropout(0.1),
-        Dense(32, activation="relu"),
-        Dense(5),
-    ]
+# --- Call built model ---
+meta = {
+    "X_columns": list(X.columns),
+    "y_columns": list(y.columns),
+    "split_index": len(X_train),
+    "lead_hours": 6,
+}
+
+model, X_scaler, y_scaler, history = train.get_or_train(
+    X_train_scaled, y_train_scaled,
+    X_test_scaled, y_test_scaled,
+    X_scaler, y_scaler,
+    force_retrain=False, # set True to retrain
+    lr=0.001, epochs=100, batch_size=20,
+    meta=meta, input_dim=X_train_scaled.shape[1],
 )
-# loss = MSE(prediction, state_t6h)
-model.compile(optimizer=Adam(learning_rate=0.001), loss="mean_squared_error")
-model.summary()
-# Train the model as in pseudocode loop
-history = model.fit(
-    X_train_scaled,
-    y_train_scaled,
-    epochs=100,
-    batch_size=20,
-    validation_data=(X_test_scaled, y_test_scaled),
-    verbose=1,
-)
-# Plot training loss
-analysis.training_loss(history)
+
+if history is not None:
+    analysis.training_loss(history)
+
 # Evaluate
 y_pred_scaled = model.predict(X_test_scaled)
 y_pred = y_scaler.inverse_transform(y_pred_scaled)
@@ -87,4 +83,14 @@ tbl_err_t2m = analysis.plot_error_curves(
 )
 tbl_skill_t2m = analysis.plot_skill_curves(
     skill_pers=skill_pers, skill_climo=skill_climo, var="t2m", figname="skill"
+)
+rmse_multi = analysis.plot_rmse_growth(
+    steps=30,
+    xi_lim=100,
+    X_test=X_test,
+    y_test=y_test,
+    y_train=y_train,
+    model=model,
+    X_scaler=X_scaler,
+    y_scaler=y_scaler,
 )
