@@ -45,9 +45,7 @@ def rollout_predictions(model, X_test, y_test, steps, X_i, X_scaler, y_scaler):
     return numpy.array(rmse)
 
 
-def plot_rmse_growth(
-    steps, xi_lim, X_test, y_test, y_train, model, X_scaler, y_scaler
-):
+def plot_rmse_growth(steps, xi_lim, X_test, y_test, y_train, model, X_scaler, y_scaler):
     # Average RMSE over multiple rollouts to reduce variability
     rmse = numpy.zeros((steps, 5))
     for n in range(xi_lim):
