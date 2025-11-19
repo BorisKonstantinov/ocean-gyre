@@ -20,7 +20,11 @@ META_PATH = os.path.join(ARTIFACTS_DIR, "meta.json")
 
 
 def _artifacts_exist() -> bool:
-    return os.path.exists(MODEL_PATH) and os.path.exists(X_SCALER_PATH) and os.path.exists(Y_SCALER_PATH)
+    return (
+        os.path.exists(MODEL_PATH)
+        and os.path.exists(X_SCALER_PATH)
+        and os.path.exists(Y_SCALER_PATH)
+    )
 
 
 def build_model(input_dim: int, lr: float = 1e-3) -> tf.keras.Model:

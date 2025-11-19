@@ -10,7 +10,7 @@ from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import Input
 
-# Homebrew imports alias egg="source ~/.venv/g/bin/activate" 
+# Homebrew imports alias egg="source ~/.venv/g/bin/activate"
 import data
 import analysis
 import train
@@ -41,12 +41,18 @@ meta = {
 }
 
 model, X_scaler, y_scaler, history = train.get_or_train(
-    X_train_scaled, y_train_scaled,
-    X_test_scaled, y_test_scaled,
-    X_scaler, y_scaler,
-    force_retrain=False, # set True to retrain
-    lr=0.001, epochs=100, batch_size=20,
-    meta=meta, input_dim=X_train_scaled.shape[1],
+    X_train_scaled,
+    y_train_scaled,
+    X_test_scaled,
+    y_test_scaled,
+    X_scaler,
+    y_scaler,
+    force_retrain=False,  # set True to retrain
+    lr=0.001,
+    epochs=100,
+    batch_size=20,
+    meta=meta,
+    input_dim=X_train_scaled.shape[1],
 )
 
 if history is not None:
